@@ -2,8 +2,9 @@ if SERVER then return end
 
 local enable_desc = 'Activates the Target Armor Break Indicator'
 local type_desc = 'Set the Target Indicator style'
-local sfx_desc = 'Enable the sound of the Target Indicator'
-local icon_desc = 'Set the resolution of the indicator icon'
+local sfx_desc = 'Enable the sound of the target indicator'
+local icon_res_desc = 'Set the resolution of the indicator icon'
+local icon_desc = 'Enables visual icon of the target indicator'
 
 local sounds = 
     {
@@ -56,36 +57,29 @@ local function loadSavedStyle()
     if err404 then RunConsoleCommand('abindicator_target_type', 'none') end
 end
 
-CreateConVar('abindicator_target_enable','0', {FCVAR_ARCHIVE, FCVAR_USERINFO}, enable_desc)
+CreateConVar('abindicator_target_enable','1', {FCVAR_ARCHIVE, FCVAR_USERINFO}, enable_desc)
 local abi_type = CreateConVar('abindicator_target_type', 'none', {FCVAR_ARCHIVE}, type_desc)
 local abi_vol = CreateConVar('abindicator_target_sound', '1', {FCVAR_ARCHIVE}, sfx_desc)
-local abi_icon_res = CreateConVar('abindicator_target_icon_res', '256', {FCVAR_ARCHIVE}, icon_desc)
+local abi_icon_res = CreateConVar('abindicator_target_icon_res', '256', {FCVAR_ARCHIVE}, icon_res_desc)
+local abi_icon = CreateConVar('abindicator_target_icon', '1', {FCVAR_ARCHIVE}, icon_desc)
 local lastExecT = 0
+local iconOpacity = 255
 local noStyle = false
 
 --load specific settings--
 loadSavedStyle()
 --------------------------
 
-hook.Add('HUDPaint', 'abi', function()
-    if lastExecT < CurTime() then return end
-    local icon_size = math.max(abi_icon_res:GetInt(), 0)
+hook.Add('PopulateToolMenu', 'TargetArmorBreakIndicatorOptions', function()
 
-    if not noStyle and not isNil(selectedIcon) then
-        surface.SetDrawColor( 255, 255, 255, ( lastExecT - CurTime() ) * 255 )
-        surface.SetMaterial(selectedIcon)
-        surface.DrawTexturedRect(ScrW() / 2 - icon_size / 2, ScrH() / 2 + (0.4 / 9) * (ScrH() / 2), icon_size, icon_size)
-    end
-end )
-
-hook.Add('PopulateToolMenu', 'abi', function()
-
-    spawnmenu.AddToolMenuOption('Utilities', 'ZachWK', 'abi', 'Target Armor Break Indicator', '', '', function(optionPanel)
+    spawnmenu.AddToolMenuOption('Utilities', 'ZachWK', 'TargetArmorBreakIndicatorOptionsMenu', 'Target Armor Break Indicator', '', '', function(optionPanel)
         optionPanel:Clear()
         optionPanel:CheckBox('Activate', 'abindicator_target_enable')
         optionPanel:ControlHelp('Enables the Target Armor Break Indicator')
         optionPanel:CheckBox('Sounds', 'abindicator_target_sound')
         optionPanel:ControlHelp('Enables sounds for the Indicator')
+        optionPanel:CheckBox('Indicator Icon', 'abindicator_target_icon')
+        optionPanel:ControlHelp('Enables visual icon for the Indicator')
 
         local indicator_styles = optionPanel:ComboBox('Styles', 'abindicator_target_type')
             indicator_styles:SetSortItems(false)
@@ -94,28 +88,54 @@ hook.Add('PopulateToolMenu', 'abi', function()
             for i = 2, #combolist do
                 indicator_styles:AddChoice(combolist[i][1], combolist[i][2])
             end
+
             indicator_styles:AddSpacer()
+
             indicator_styles.OnSelect = function(self, index, value)
                 RunConsoleCommand('abindicator_target_type', combolist[index][2])
                 if index != 1 then
                     selectedSound = sounds[index - 1]
                     selectedIcon = icons[index - 1]
                     noStyle = false
-
-                else noStyle = true
+                else 
+                    noStyle = true
                 end
             end
-            
         optionPanel:NumSlider('Texture Resolution', 'abindicator_target_icon_res', 192, 256, 0)
+    end )
+end )
 
-    end)
+hook.Add('HUDPaint', 'TargetOnCrackedIndication', function()
+    if lastExecT < CurTime() then 
+        iconOpacity = 255
+    return end
+
+
+    if abi_icon:GetBool() and not noStyle and not isNil(selectedIcon) then
+        local icon_size = math.max(abi_icon_res:GetInt(), 0)
+
+        surface.SetDrawColor( 255, 255, 255, iconOpacity )
+        surface.SetMaterial(selectedIcon)
+        surface.DrawTexturedRect(ScrW() / 2 - (icon_size - 192) / 2, ScrH() / 2 - (icon_size - 192) / 2, icon_size, icon_size)        
+
+        if math.floor(iconOpacity) > 0 then
+            iconOpacity = math.floor((lastExecT - CurTime() - 0.125) * 255)
+        end
+    end
 end )
 
 net.Receive('ab_broken', function()
-
     if abi_vol:GetBool() and not noStyle and not isNil(selectedSound) then
         surface.PlaySound(selectedSound)
     end
-    lastExecT = CurTime() + 1.5;
+    
+    if abi_icon:GetBool() and not noStyle then
+        lastExecT = CurTime() + 1.125;
+    end
+end )
 
+net.Receive('ab_broken_death', function()
+    if abi_vol:GetBool() and not noStyle and not isNil(selectedSound) then
+        surface.PlaySound(selectedSound)
+    end
 end )

@@ -2,7 +2,8 @@ if SERVER then return end
 
 local enable_desc = 'Activates the Player Armor Break Indicator'
 local type_desc = 'Set the Player Indicator style'
-local sfx_desc = 'Enable the sound of the Player Indicator'
+local sfx_desc = 'Enable the sound of the player indicator'
+local fx_desc = 'Enables visual effects of the player indicator'
 
 local sounds = 
     {
@@ -46,35 +47,27 @@ local function loadSavedStyle()
     if err404 then RunConsoleCommand('abindicator_player_type', 'none') end
 end
 
-CreateConVar('abindicator_player_enable','0', {FCVAR_ARCHIVE, FCVAR_USERINFO}, enable_desc)
+CreateConVar('abindicator_player_enable','1', {FCVAR_ARCHIVE, FCVAR_USERINFO}, enable_desc)
 local abi_type = CreateConVar('abindicator_player_type', 'none', {FCVAR_ARCHIVE}, type_desc)
 local abi_vol = CreateConVar('abindicator_player_sound', '1', {FCVAR_ARCHIVE}, sfx_desc)
-local lastExecT = 0
+local abi_fx = CreateConVar('abindicator_player_fx', '1', {FCVAR_ARCHIVE}, fx_desc)
 local noStyle = false
+local lastExecT = 0
+local vfxSpeed = 0.075
 
 --load specific settings--
 loadSavedStyle()
 --------------------------
---[[
-hook.Add('HUDPaint', 'abi2', function()
-    if lastExecT < CurTime() then return end
-    local icon_size = math.max(abi_icon_res:GetInt(), 0)
 
-    if not noStyle and not isNil(selectedIcon) then
-        surface.SetDrawColor( 255, 255, 255, ( lastExecT - CurTime() ) * 255 )
-        surface.SetMaterial(selectedIcon)
-        surface.DrawTexturedRect(ScrW() / 2 - icon_size / 2, ScrH() / 2 + (0.4 / 9) * (ScrH() / 2), icon_size, icon_size)
-    end
-end )]]
-
-hook.Add('PopulateToolMenu', 'abi2', function()
-
-    spawnmenu.AddToolMenuOption('Utilities', 'ZachWK', 'abi2', 'Player Armor Break Indicator', '', '', function(optionPanel)
+hook.Add('PopulateToolMenu', 'PlayerArmorBreakIndicatorOptions', function()
+    spawnmenu.AddToolMenuOption('Utilities', 'ZachWK', 'PlayerArmorBreakIndicatorOptionsMenu', 'Player Armor Break Indicator', '', '', function(optionPanel)
         optionPanel:Clear()
         optionPanel:CheckBox('Activate', 'abindicator_player_enable')
         optionPanel:ControlHelp('Enables the Player Armor Break Indicator')
         optionPanel:CheckBox('Sounds', 'abindicator_player_sound')
         optionPanel:ControlHelp('Enables sounds for the Indicator')
+        optionPanel:CheckBox('Indicator FX', 'abindicator_player_fx')
+        optionPanel:ControlHelp('Enables visual FX for the Indicator')
 
         local indicator_styles = optionPanel:ComboBox('Styles', 'abindicator_player_type')
             indicator_styles:SetSortItems(false)
@@ -95,11 +88,41 @@ hook.Add('PopulateToolMenu', 'abi2', function()
     end)
 end )
 
-net.Receive('ab_cracked', function()
+hook.Add('RenderScreenspaceEffects', 'PlayerOnCrackedVFX', function ()
+    if lastExecT < CurTime() then 
+        vfxSpeed = 0.075
+    return end
+    
+    if not noStyle and abi_fx:GetBool() then
+        DrawMotionBlur( vfxSpeed, 0.675, 0.01 )
+        
+        if vfxSpeed <= 1 then
+            vfxSpeed = vfxSpeed + 0.005
+        end
+    end
+end )
 
+hook.Add('HUDPaint', 'PlayerOnCrackedConcussion', function()
+    if lastExecT < CurTime() then return end
+
+    if abi_fx:GetBool() then
+        surface.SetDrawColor(255, 255, 255, ( lastExecT - CurTime() - 1.75 ) * 255)
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+    end
+end )
+
+net.Receive('ab_cracked', function()
     if abi_vol:GetBool() and not noStyle and not isNil(selectedSound) then
         surface.PlaySound(selectedSound)
     end
-    lastExecT = CurTime() + 1.5;
 
+    if abi_fx:GetBool() then
+        lastExecT = CurTime() + 2.5
+    end
+end )
+
+net.Receive('ab_cracked_death', function()
+    if abi_vol:GetBool() and not noStyle and not isNil(selectedSound) then
+        surface.PlaySound(selectedSound)
+    end
 end )
