@@ -1,15 +1,16 @@
 if SERVER then return end
 
 local enable_desc = 'Activates the Player Armor Break Indicator'
-local type_desc = 'Set the Player Indicator style'
-local sfx_desc = 'Enable the sound of the player indicator'
+local type_desc = 'Set the Player Indicator style. Applicable values are: \n\tnone, apex, bdrls, mw1, dv2, fnite, mc'
+local sfx_desc = 'Enables the sound of the player indicator'
 local fx_desc = 'Enables visual effects of the player indicator'
 
 local sounds = 
     {
         Sound('player/break_apex.ogg'),
         Sound('player/break_bdrls.ogg'), 
-        Sound('player/break_cod.ogg'),
+        Sound('player/break_mw1.ogg'), 
+        Sound('player/break_mw2.ogg'),
         Sound('player/break_dv2.ogg'),
         Sound('player/break_fortnite.ogg'),
         Sound('player/break_mc.ogg')
@@ -20,8 +21,9 @@ local combolist =
         {'None', 'none'},
         {'Apex Legends', 'apex'},
         {'Borderlands', 'bdrls'},
-        {'Call of Duty - Warzone', 'codwz'},
-        {'Division 2', 'dv2'},
+        {'Call of Duty - Modern Warfare 1', 'mw1'},
+        {'Call of Duty - Modern Warfare 2', 'mw2'},
+        {'The Division 2', 'dv2'},
         {'Fortnite', 'fnite'},
         {'Minecraft', 'mc'}
     }
@@ -36,7 +38,7 @@ local function loadSavedStyle()
     if not isNil(tarkey) then
         local key = tarkey:GetString()
 
-        for i = 1, #combolist do
+        for i = 2, #combolist do
             if key == combolist[i][2] then
                 selectedSound = sounds[i - 1]
                 err404 = false
@@ -44,10 +46,11 @@ local function loadSavedStyle()
             end
         end
     end
+    
     if err404 then RunConsoleCommand('abindicator_player_type', 'none') end
 end
 
-CreateConVar('abindicator_player_enable','1', {FCVAR_ARCHIVE, FCVAR_USERINFO}, enable_desc)
+local abi_on = CreateConVar('abindicator_player_enable','1', {FCVAR_ARCHIVE, FCVAR_USERINFO}, enable_desc)
 local abi_type = CreateConVar('abindicator_player_type', 'none', {FCVAR_ARCHIVE}, type_desc)
 local abi_vol = CreateConVar('abindicator_player_sound', '1', {FCVAR_ARCHIVE}, sfx_desc)
 local abi_fx = CreateConVar('abindicator_player_fx', '1', {FCVAR_ARCHIVE}, fx_desc)
@@ -71,18 +74,20 @@ hook.Add('PopulateToolMenu', 'PlayerArmorBreakIndicatorOptions', function()
 
         local indicator_styles = optionPanel:ComboBox('Styles', 'abindicator_player_type')
             indicator_styles:SetSortItems(false)
-            indicator_styles:AddChoice('None', nil)
 
-            for i = 2, #combolist do
+            for i = 1, #combolist do
                 indicator_styles:AddChoice(combolist[i][1], combolist[i][2])
             end
+
             indicator_styles:AddSpacer()
+
             indicator_styles.OnSelect = function(self, index, value)
                 RunConsoleCommand('abindicator_player_type', combolist[index][2])
                 if index != 1 then
                     selectedSound = sounds[index - 1]
                     noStyle = false
-                else noStyle = true
+                else 
+                    noStyle = true
                 end
             end
     end)
@@ -94,10 +99,10 @@ hook.Add('RenderScreenspaceEffects', 'PlayerOnCrackedVFX', function ()
     return end
     
     if not noStyle and abi_fx:GetBool() then
-        DrawMotionBlur( vfxSpeed, 0.675, 0.01 )
+        DrawMotionBlur( vfxSpeed, 10, 0.01 )
         
         if vfxSpeed <= 1 then
-            vfxSpeed = vfxSpeed + 0.005
+            vfxSpeed = vfxSpeed + 0.00375
         end
     end
 end )
@@ -112,17 +117,21 @@ hook.Add('HUDPaint', 'PlayerOnCrackedConcussion', function()
 end )
 
 net.Receive('ab_cracked', function()
-    if abi_vol:GetBool() and not noStyle and not isNil(selectedSound) then
-        surface.PlaySound(selectedSound)
-    end
-
-    if abi_fx:GetBool() then
-        lastExecT = CurTime() + 2.5
-    end
+    if abi_on:GetBool() and not noStyle then
+        if abi_fx:GetBool() then
+            lastExecT = CurTime() + 2.5
+        end
+        
+        if abi_vol:GetBool() then
+            surface.PlaySound(selectedSound)
+        end
+    else return end
 end )
 
 net.Receive('ab_cracked_death', function()
-    if abi_vol:GetBool() and not noStyle and not isNil(selectedSound) then
-        surface.PlaySound(selectedSound)
-    end
+    if abi_on:GetBool() and not noStyle then
+        if abi_vol:GetBool() then
+            surface.PlaySound(selectedSound)
+        end
+    else return end
 end )
