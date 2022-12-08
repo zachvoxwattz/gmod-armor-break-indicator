@@ -102,6 +102,8 @@ local breakIndicationDrawTime = 0
 local hitIndicationDrawTime = 0
 local breakIconOpacity = 255
 local hitIconOpacity = 255
+local iconFXScale = 25 -- In Percentage
+local iconFXRes = 0
 local noStyle = false
 
 --load specific settings--
@@ -151,14 +153,31 @@ hook.Add('PopulateToolMenu', 'TargetArmorIndicatorOptions', function()
     end )
 end )
 
+local function getSelectedRes()
+    return math.max(abi_icon_res:GetInt(), 0)
+end 
+
+local function getIconRes()
+    local selectedRes = getSelectedRes()
+    local returnedValue
+
+    if math.floor(iconFXRes) > selectedRes then
+        iconFXRes = iconFXRes - 5.5
+        returnedValue = iconFXRes
+    else
+        returnedValue = selectedRes
+    end
+    
+    return returnedValue
+end
+
 hook.Add('HUDPaint', 'TargetOnBrokenIndication', function()
     if breakIndicationDrawTime < CurTime() then
         breakIconOpacity = 255
     return end
 
-
     if abi_break_icon:GetBool() and not noStyle and not isNil(selectedBreakIcon) then
-        local icon_size = math.max(abi_icon_res:GetInt(), 0)
+        local icon_size = getIconRes()
 
         surface.SetDrawColor( 255, 255, 255, breakIconOpacity )
         surface.SetMaterial(selectedBreakIcon)
@@ -178,7 +197,7 @@ hook.Add('HUDPaint', 'TargetOnHitIndication', function()
     return end
 
     if abi_hit_icon:GetBool() and not noStyle and not isNil(selectedHitIcon) then
-        local icon_size = math.max(abi_icon_res:GetInt(), 0)
+        local icon_size = getIconRes()
 
         surface.SetDrawColor( 255, 255, 255, hitIconOpacity )
         surface.SetMaterial(selectedHitIcon)
@@ -195,6 +214,7 @@ net.Receive('ab_broken', function()
         if abi_break_icon:GetBool() then
             breakIndicationDrawTime = CurTime() + 1.75
             hitIndicationDrawTime = -1
+            iconFXRes = getSelectedRes() + getSelectedRes() * (iconFXScale / 100)
         end
         
         if abi_break_vol:GetBool() then
@@ -207,6 +227,8 @@ net.Receive('ab_hit', function()
     if abi_hit_on:GetBool() and not noStyle then
         if abi_hit_icon:GetBool() then
             hitIndicationDrawTime = CurTime() + 1
+            iconFXRes = CurTime() + 0.5
+            iconFXRes = getSelectedRes() + getSelectedRes() * (iconFXScale / 100)
         end
         
         if abi_hit_vol:GetBool() then

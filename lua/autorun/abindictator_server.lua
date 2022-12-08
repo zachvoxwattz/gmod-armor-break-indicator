@@ -3,28 +3,8 @@ if CLIENT then return end
 AddCSLuaFile('autorun/abindictator_client_target.lua')
 AddCSLuaFile('autorun/abindictator_client_player.lua')
 
-resource.AddSingleFile('sound/target/break_mw1.ogg')
-resource.AddSingleFile('sound/target/break_mc.ogg')
-resource.AddSingleFile('sound/target/break_apex.ogg')
-resource.AddSingleFile('sound/target/break_fortnite.ogg')
-resource.AddSingleFile('sound/target/break_bdrls.ogg')
-
-resource.AddSingleFile('sound/player/break_apex.ogg')
-resource.AddSingleFile('sound/player/break_bdrls.ogg')
-resource.AddSingleFile('sound/player/break_mw1.ogg')
-resource.AddSingleFile('sound/player/break_dv2.ogg')
-resource.AddSingleFile('sound/player/break_fortnite.ogg')
-resource.AddSingleFile('sound/player/break_mc.ogg')
-
-resource.AddSingleFile('materials/icon_mw1.png')
-resource.AddSingleFile('materials/icon_mc.png')
-resource.AddSingleFile('materials/icon_apex.png')
-resource.AddSingleFile('materials/icon_bdrls.png')
-resource.AddSingleFile('materials/icon_fortnite.png')
-
 local targetArmorAfter = 0
 local targetArmorBefore = 0
-
 local targetIsAlive = nil
 local attacker = nil
 
@@ -91,7 +71,7 @@ hook.Add('PostEntityTakeDamage', 'PostPlayerDamageListener', function(target, dm
         return end
 
         if targetIsAlive and targetArmorBefore != 0 then
-            if targetArmorAfter != 0 then
+            if targetArmorAfter != 0 and attacker != target then
                 informHit(attacker)
             else
                 crack(target)
