@@ -1,13 +1,12 @@
-if SERVER then return end
-
 local enable_desc = 'Activates the Target Armor Break Indicator'
 local hit_enable_desc = 'Activates the Target Armor Hit Indicator'
 local type_desc = 'Set the Target Indicator style. Applicable values are: \n\tnone, apex, bdrls, mw1, fnite, mc'
-local break_sfx_desc = 'Enables the sound of the target indicator'
-local hit_sfx_desc = 'Enables the sound of the target armor hit indicator'
-local break_icon_desc = 'Enables visual icon of the target armor break indicator'
-local hit_icon_desc = 'Enables visual icon of the target armor hit indicator'
+local break_sfx_desc = 'Enables break indicator sounds'
+local hit_sfx_desc = 'Enables hit indicator sounds'
+local break_icon_desc = 'Enables break indicator visual icons'
+local hit_icon_desc = 'Enables hit indicator visual icons'
 local icon_res_desc = 'Set the resolution of the indicator icon'
+local random_desc = "Automatically sets a random style if 'None' value is selected.\n\nWhen enabled, this functionality takes effect immediately on the next map load"
 
 local breakSounds = 
     {
@@ -65,6 +64,27 @@ local selectedBreakSound = nil
 local selectedHitIcon = nil
 local selectedHitSound = nil
 
+-- Console Variables initialization
+local abi_break_on = CreateConVar('abindicator_target_break_enable','1', {FCVAR_ARCHIVE, FCVAR_USERINFO}, enable_desc)
+local abi_hit_on = CreateConVar('abindicator_target_hit_enable', '1', {FCVAR_ARCHIVE, FCVAR_USERINFO}, hit_enable_desc)
+local abi_type = CreateConVar('abindicator_target_type', 'none', {FCVAR_ARCHIVE}, type_desc)
+local abi_break_vol = CreateConVar('abindicator_target_break_sound', '1', {FCVAR_ARCHIVE}, break_sfx_desc)
+local abi_hit_vol = CreateConVar('abindicator_target_hit_sound', '1', {FCVAR_ARCHIVE}, hit_sfx_desc)
+local abi_break_icon = CreateConVar('abindicator_target_break_icon', '1', {FCVAR_ARCHIVE}, break_icon_desc)
+local abi_hit_icon = CreateConVar('abindicator_target_hit_icon', '1', {FCVAR_ARCHIVE}, hit_icon_desc)
+local abi_icon_res = CreateConVar('abindicator_target_icon_res', '192', {FCVAR_ARCHIVE}, icon_res_desc)
+local abi_random_on = CreateConVar('abindicator_target_type_random', '1', {FCVAR_ARCHIVE}, random_desc)
+
+-- Working variables
+local breakIndicationDrawTime = 0
+local hitIndicationDrawTime = 0
+local breakIconOpacity = 255
+local hitIconOpacity = 255
+local iconFXScale = 25 -- In Percentage
+local iconFXRes = 0
+local noStyle = false
+
+-- Some useful local functions
 local function isNil(s) return s == nil or s == '' end
 local function loadSavedStyle()
     local tarkey = GetConVar('abindicator_target_type')
@@ -84,27 +104,13 @@ local function loadSavedStyle()
             end
         end
     end
-    if err404 then RunConsoleCommand('abindicator_target_type', 'none') end
+-- If there is no style found, a random style is generated for user.
+    if err404 and abi_random_on:GetBool() then
+        math.randomseed(os.time())
+        for iter = 1, #combolist do math.random() end
+        RunConsoleCommand('abindicator_target_type', combolist[math.random(2, #combolist)][2])
+    end
 end
-
--- Console Variables initialization
-local abi_break_on = CreateConVar('abindicator_target_break_enable','1', {FCVAR_ARCHIVE, FCVAR_USERINFO}, enable_desc)
-local abi_hit_on = CreateConVar('abindicator_target_hit_enable', '1', {FCVAR_ARCHIVE, FCVAR_USERINFO}, hit_enable_desc)
-local abi_type = CreateConVar('abindicator_target_type', 'none', {FCVAR_ARCHIVE}, type_desc)
-local abi_break_vol = CreateConVar('abindicator_target_break_sound', '1', {FCVAR_ARCHIVE}, break_sfx_desc)
-local abi_hit_vol = CreateConVar('abindicator_target_hit_sound', '1', {FCVAR_ARCHIVE}, hit_sfx_desc)
-local abi_break_icon = CreateConVar('abindicator_target_break_icon', '1', {FCVAR_ARCHIVE}, break_icon_desc)
-local abi_hit_icon = CreateConVar('abindicator_target_hit_icon', '1', {FCVAR_ARCHIVE}, hit_icon_desc)
-local abi_icon_res = CreateConVar('abindicator_target_icon_res', '192', {FCVAR_ARCHIVE}, icon_res_desc)
-
--- Working variables
-local breakIndicationDrawTime = 0
-local hitIndicationDrawTime = 0
-local breakIconOpacity = 255
-local hitIconOpacity = 255
-local iconFXScale = 25 -- In Percentage
-local iconFXRes = 0
-local noStyle = false
 
 --load specific settings--
 loadSavedStyle()
@@ -112,21 +118,22 @@ loadSavedStyle()
 
 hook.Add('PopulateToolMenu', 'TargetArmorIndicatorOptions', function()
 
-    spawnmenu.AddToolMenuOption('Utilities', 'ZachWK', 'TargetArmorIndicatorOptionsMenu', 'Target Armor Indicator', '', '', function(optionPanel)
+    spawnmenu.AddToolMenuOption('Utilities', 'ZachWattz', 'TargetArmorIndicatorOptionsMenu', 'Target Armor Indicator', '', '', function(optionPanel)
         optionPanel:Clear()
-        optionPanel:CheckBox('Activate Break Indicator', 'abindicator_target_break_enable')
-        optionPanel:ControlHelp('Enables the Armor Break Indicator')
+        optionPanel:CheckBox('Break Indicator', 'abindicator_target_break_enable')
+        optionPanel:ControlHelp(enable_desc)
         optionPanel:CheckBox('Break Sounds', 'abindicator_target_break_sound')
-        optionPanel:ControlHelp('Enables sound for the Break Indicator')
+        optionPanel:ControlHelp(break_sfx_desc)
         optionPanel:CheckBox('Break Indicator Icon', 'abindicator_target_break_icon')
-        optionPanel:ControlHelp('Enables visual icon for the Break Indicator')
-        
-        optionPanel:CheckBox('Activate Hit Indicator', 'abindicator_target_hit_enable')
-        optionPanel:ControlHelp('Enables the Armor Hit Indicator')
+        optionPanel:ControlHelp(break_icon_desc)
+        optionPanel:Help('====================')
+        optionPanel:CheckBox('Hit Indicator', 'abindicator_target_hit_enable')
+        optionPanel:ControlHelp(hit_enable_desc)
         optionPanel:CheckBox('Hit Sounds', 'abindicator_target_hit_sound')
-        optionPanel:ControlHelp('Enables sound for the Hit Indicator')
+        optionPanel:ControlHelp(hit_sfx_desc)
         optionPanel:CheckBox('Hit Indicator Icon', 'abindicator_target_hit_icon')
-        optionPanel:ControlHelp('Enables visual icon for the Hit Indicator')
+        optionPanel:ControlHelp(hit_icon_desc)
+        optionPanel:Help('====================')
 
         local indicator_styles = optionPanel:ComboBox('Styles', 'abindicator_target_type')
             indicator_styles:SetSortItems(false)
@@ -150,6 +157,8 @@ hook.Add('PopulateToolMenu', 'TargetArmorIndicatorOptions', function()
                 end
             end
         optionPanel:NumSlider('Texture Resolution', 'abindicator_target_icon_res', 192, 256, 0)
+        optionPanel:CheckBox('Random Style Picker', 'abindicator_target_type_random')
+        optionPanel:ControlHelp(random_desc)
     end )
 end )
 
@@ -171,7 +180,7 @@ local function getIconRes()
     return returnedValue
 end
 
-hook.Add('HUDPaint', 'TargetOnBrokenIndication', function()
+hook.Add('HUDPaint', 'TargetArmorBrokenIndication', function()
     if breakIndicationDrawTime < CurTime() then
         breakIconOpacity = 255
     return end
@@ -191,7 +200,7 @@ hook.Add('HUDPaint', 'TargetOnBrokenIndication', function()
     shouldPlayHitSound = true
 end )
 
-hook.Add('HUDPaint', 'TargetOnHitIndication', function()
+hook.Add('HUDPaint', 'TargetArmorHitIndication', function()
     if hitIndicationDrawTime < CurTime() then 
         hitIconOpacity = 255
     return end
@@ -209,7 +218,7 @@ hook.Add('HUDPaint', 'TargetOnHitIndication', function()
     end
 end )
 
-net.Receive('ab_broken', function()
+net.Receive('ab_armor_broken', function()
     if abi_break_on:GetBool() and not noStyle then
         if abi_break_icon:GetBool() then
             breakIndicationDrawTime = CurTime() + 1.75
@@ -220,19 +229,19 @@ net.Receive('ab_broken', function()
         if abi_break_vol:GetBool() then
             surface.PlaySound(selectedBreakSound)
         end
-    else return end
+    end
 end )
 
-net.Receive('ab_hit', function()
+net.Receive('ab_armor_hit', function()
     if abi_hit_on:GetBool() and not noStyle then
         if abi_hit_icon:GetBool() then
             hitIndicationDrawTime = CurTime() + 1
-            iconFXRes = CurTime() + 0.5
+            breakIndicationDrawTime = -1
             iconFXRes = getSelectedRes() + getSelectedRes() * (iconFXScale / 100)
         end
         
         if abi_hit_vol:GetBool() then
             surface.PlaySound(selectedHitSound)
         end
-    else return end
+    end
 end)
