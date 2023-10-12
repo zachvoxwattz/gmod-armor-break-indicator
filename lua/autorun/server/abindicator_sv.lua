@@ -48,7 +48,11 @@ local function attackerIsNotTarget(attacker, target)
 end
 
 ---------------------------------------------
----------------------------------------------
+
+local function invalidActivationConditions(target)
+    return not isHumanPlayer(target) or not targetHasArmor
+end
+
 ---------------------------------------------
 ---------------------------------------------
 ---------------------------------------------
@@ -58,11 +62,7 @@ end
 
 hook.Add('EntityTakeDamage', 'PlayerDamageListener', function(target, damageInfo)
     if not isHumanPlayer(target) then return end
-    if target:Armor() > 0 then
-        targetHasArmor = true
-    else
-        targetHasArmor = false
-    end
+    targetHasArmor = target:Armor() > 0
 end)
 
 
@@ -71,12 +71,11 @@ end)
 
 hook.Add('PostEntityTakeDamage', 'PlayerDamageExecutor', function(target, damageInfo)
     local attacker = damageInfo:GetAttacker()
-    if not isHumanPlayer(attacker) or not isHumanPlayer(target) or not targetHasArmor then return end
+    if invalidActivationConditions(target) or not isHumanPlayer(attacker) then return end
 
     local targetIsAlive = target:Alive()
-    local targetArmorAfter = target:Armor()
-
     if targetIsAlive then
+        local targetArmorAfter = target:Armor()
         if targetArmorAfter > 0 and attackerIsNotTarget(attacker, target) then
             informAttackerArmorHit(attacker)
         return end
@@ -101,12 +100,11 @@ end)
 
 hook.Add('PostEntityTakeDamage', 'NPCDamageExecutor', function(target, damageInfo)
     local attacker = damageInfo:GetAttacker()
-    if isHumanPlayer(attacker) or not isHumanPlayer(target) or not targetHasArmor then return end
+    if invalidActivationConditions(target) or isHumanPlayer(attacker) then return end
 
     local targetIsAlive = target:Alive()
-    local targetArmorAfter = target:Armor()
-
     if targetIsAlive then
+        local targetArmorAfter = target:Armor()
         if targetArmorAfter == 0 then
             informTargetArmorBrokenLive(target)
         return end
