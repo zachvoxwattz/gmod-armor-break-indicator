@@ -1,0 +1,14 @@
+[
+    {
+        "key": "circle",
+        "label": "Impulse Circle"
+    },
+    {
+        "key": "vignette",
+        "label": "Vignette FOV"
+    },
+    {
+        "key": "concuss",
+        "label": "Concussion"
+    }
+]

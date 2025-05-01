@@ -1,0 +1,42 @@
+[
+    {
+        "key": "apex",
+        "label": "Apex Legends",
+        "breakSoundUri": "zw_hud/player/break_apex.ogg"
+    },
+    {
+        "key": "bdrls",
+        "label": "Borderlands",
+        "breakSoundUri": "zw_hud/player/break_bdrls.ogg"
+    },
+    {
+        "key": "mw1",
+        "label": "Call of Duty - MW1",
+        "breakSoundUri": "zw_hud/player/break_mw1.ogg"
+    },
+    {
+        "key": "mw2",
+        "label": "Call of Duty - MW2",
+        "breakSoundUri": "zw_hud/player/break_mw2.ogg"
+    },
+    {
+        "key": "mw3",
+        "label": "Call of Duty - MW3",
+        "breakSoundUri": "zw_hud/player/break_mw3.ogg"
+    },
+    {
+        "key": "dv2",
+        "label": "The Division 2",
+        "breakSoundUri": "zw_hud/player/break_dv2.ogg"
+    },
+    {
+        "key": "fortnite",
+        "label": "Fortnite",
+        "breakSoundUri": "zw_hud/player/break_fortnite.ogg"
+    },
+    {
+        "key": "mc",
+        "label": "Minecraft",
+        "breakSoundUri": "zw_hud/player/break_mc.ogg"
+    }
+]

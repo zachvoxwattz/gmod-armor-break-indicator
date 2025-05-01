@@ -28,8 +28,8 @@ local soundsChoiceList = { {'None', 'none'} }
 
 -- Reads the registry and initializes sounds and choices
 local soundsChoicesContent = nil
-if not DEV_MODE then soundsChoicesContent = file.Read('data/zwasi_data/player/sounds_choices.json', 'WORKSHOP')
-else soundsChoicesContent = file.Read('zwasi_data/player/sounds_choices.json', 'DATA') end
+if not DEV_MODE then soundsChoicesContent = file.Read('data/zw_asi/player/sounds_choices.json', 'WORKSHOP')
+else soundsChoicesContent = file.Read('zw_asi/player/sounds_choices.json', 'DATA') end
 
 
 -- If 'soundsChoicesContent' is nil, displays warning message to console and performs no futher action to the addon.
@@ -53,8 +53,8 @@ local breakGraphics = {}
 
 -- Reads the registry for graphics resource and initializes all of them
 local graphicsResourceContent = nil
-if not DEV_MODE then graphicsResourceContent = file.Read('data/zwasi_data/player/graphics_resource.json', 'WORKSHOP')
-else graphicsResourceContent = file.Read('zwasi_data/player/graphics_resource.json', 'DATA') end
+if not DEV_MODE then graphicsResourceContent = file.Read('data/zw_asi/player/graphics_resource.json', 'WORKSHOP')
+else graphicsResourceContent = file.Read('zw_asi/player/graphics_resource.json', 'DATA') end
 
 
 -- If 'graphicsResourceContent' is nil, displays warning message to console and performs no futher action to the addon.
@@ -78,8 +78,8 @@ local graphicsChoiceList = { {'None', 'none'} }
 
 -- Reads the registry for graphics choice and initializes all of them
 local graphicsChoiceContent = nil
-if not DEV_MODE then graphicsChoiceContent = file.Read('data/zwasi_data/player/graphics_choices.json', 'WORKSHOP')
-else graphicsChoiceContent = file.Read('zwasi_data/player/graphics_choices.json', 'DATA') end
+if not DEV_MODE then graphicsChoiceContent = file.Read('data/zw_asi/player/graphics_choices.json', 'WORKSHOP')
+else graphicsChoiceContent = file.Read('zw_asi/player/graphics_choices.json', 'DATA') end
 
 
 -- If 'graphicsChoiceContent' is nil, displays warning message to console and performs no futher action to the addon.

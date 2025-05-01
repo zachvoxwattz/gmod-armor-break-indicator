@@ -1,0 +1,58 @@
+[
+    {
+        "key": "apex",
+        "label": "Apex Legends",
+        "hitIconUri": "zw_hud/target/hit/icon_apex.png",
+        "hitSoundUri": "zw_hud/target/hit/hit_apex.ogg",
+        "breakIconUri": "zw_hud/target/break/icon_apex.png",
+        "breakSoundUri": "zw_hud/target/break/break_apex.ogg"
+    },
+    {
+        "key": "bdrls",
+        "label": "Borderlands",
+        "hitIconUri": "zw_hud/target/hit/icon_bdrls.png",
+        "hitSoundUri": "zw_hud/target/hit/hit_bdrls.ogg",
+        "breakIconUri": "zw_hud/target/break/icon_bdrls.png",
+        "breakSoundUri": "zw_hud/target/break/break_bdrls.ogg"
+    },
+    {
+        "key": "mw1",
+        "label": "Call of Duty - MW1",
+        "hitIconUri": "zw_hud/target/hit/icon_mw1.png",
+        "hitSoundUri": "zw_hud/target/hit/hit_mw1.ogg",
+        "breakIconUri": "zw_hud/target/break/icon_mw1.png",
+        "breakSoundUri": "zw_hud/target/break/break_mw1.ogg"
+    },
+    {
+        "key": "mw2",
+        "label": "Call of Duty - MW2",
+        "hitIconUri": "zw_hud/target/hit/icon_mw2.png",
+        "hitSoundUri": "zw_hud/target/hit/hit_mw2.ogg",
+        "breakIconUri": "zw_hud/target/break/icon_mw2.png",
+        "breakSoundUri": "zw_hud/target/break/break_mw2.ogg"
+    },
+    {
+        "key": "mw3",
+        "label": "Call of Duty - MW3",
+        "hitIconUri": "zw_hud/target/hit/icon_mw3.png",
+        "hitSoundUri": "zw_hud/target/hit/hit_mw3.ogg",
+        "breakIconUri": "zw_hud/target/break/icon_mw3.png",
+        "breakSoundUri": "zw_hud/target/break/break_mw3.ogg"
+    },
+    {
+        "key": "fortnite",
+        "label": "Fortnite",
+        "hitIconUri": "zw_hud/target/hit/icon_fortnite.png",
+        "hitSoundUri": "zw_hud/target/hit/hit_fortnite.ogg",
+        "breakIconUri": "zw_hud/target/break/icon_fortnite.png",
+        "breakSoundUri": "zw_hud/target/break/break_fortnite.ogg"
+    },
+    {
+        "key": "mc",
+        "label": "Minecraft",
+        "hitIconUri": "zw_hud/target/hit/icon_mc.png",
+        "hitSoundUri": "zw_hud/target/hit/hit_mc.ogg",
+        "breakIconUri": "zw_hud/target/break/icon_mc.png",
+        "breakSoundUri": "zw_hud/target/break/break_mc.ogg"
+    }
+]
