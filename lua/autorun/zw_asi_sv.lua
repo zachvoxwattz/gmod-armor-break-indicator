@@ -1,6 +1,5 @@
--- Script is meant to run on server only!
--- if CLIENT then return end
-if (1765 == 1765) then return end
+-- Script is meant to be running on SERVER only!
+if CLIENT then return end
 
 AddCSLuaFile('autorun/zw_asi_cl_target.lua')
 AddCSLuaFile('autorun/zw_asi_cl_player.lua')
@@ -63,17 +62,12 @@ end
 ---------------------------------------------
 ---------------------------------------------
 
-
-hook.Add('EntityTakeDamage', 'ZWASI_PlayerDamageListener', function(target, damageInfo)
+local function OnPlayerDamage(target, damageInfo)
     if not isHumanPlayer(target) then return end
     targetHasArmor = target:Armor() > 0
-end)
+end
 
-
----------------------------------------------
-
-
-hook.Add('PostEntityTakeDamage', 'ZWASI_IncomingPlayerDamageExecutor', function(target, damageInfo)
+local function OnPostPlayerDamage(target, damageInfo)
     local attacker = damageInfo:GetAttacker()
     if not isHumanPlayer(attacker) or targetHasInvalidActivationCondition(target) then return end
 
@@ -96,13 +90,9 @@ hook.Add('PostEntityTakeDamage', 'ZWASI_IncomingPlayerDamageExecutor', function(
         notifyTargetArmorBrokenDeath(target)
         notifyAttackerArmorBroken(attacker)
     end
-end)
+end
 
-
----------------------------------------------
-
-
-hook.Add('ZWASIPostEntityTakeDamage', 'ZWASI_IncomingNPCDamageExecutor', function(target, damageInfo)
+local function OnPostNPCDamage(target, damageInfo)
     local attacker = damageInfo:GetAttacker()
     if isHumanPlayer(attacker) or targetHasInvalidActivationCondition(target) then return end
 
@@ -116,4 +106,10 @@ hook.Add('ZWASIPostEntityTakeDamage', 'ZWASI_IncomingNPCDamageExecutor', functio
     else
         notifyTargetArmorBrokenDeath(target)
     end
-end)
+end
+
+
+-- Registering everything to the hook lib.
+hook.Add('EntityTakeDamage', 'ZWASI_PlayerDamageListener', OnPlayerDamage)
+hook.Add('PostEntityTakeDamage', 'ZWASI_PostPlayerDamageListener', OnPostPlayerDamage)
+hook.Add('PostEntityTakeDamage', 'ZWASI_PostNPCDamageListener', OnPostNPCDamage)

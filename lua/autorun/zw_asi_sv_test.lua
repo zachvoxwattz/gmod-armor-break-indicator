@@ -1,5 +1,6 @@
--- Script is meant to run on server only!
-if CLIENT then return end
+-- Change this variable to 'false' during development phase only.
+local DEV_MODE = true
+if CLIENT or not DEV_MODE then return end
 
 AddCSLuaFile('autorun/zw_asi_cl_target.lua')
 AddCSLuaFile('autorun/zw_asi_cl_player.lua')
