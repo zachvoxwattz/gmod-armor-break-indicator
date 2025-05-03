@@ -31,7 +31,7 @@ local choiceList = { {'None', 'none'} } -- Initial None value for none selection
 
 -- Reads the registry and initializes all of the entries
 local combinedContent = nil
-if not DEV_MODE then combinedContent = file.Read('data/zw_asi/target/combined.json', 'WORKSHOP')
+if not DEV_MODE then combinedContent = file.Read('data_static/zw_asi/target/combined.json', 'WORKSHOP')
 else combinedContent = file.Read('zw_asi/target/combined.json', 'DATA') end
 
 

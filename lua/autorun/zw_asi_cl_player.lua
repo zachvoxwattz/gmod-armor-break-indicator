@@ -28,7 +28,7 @@ local soundsChoiceList = { {'None', 'none'} }
 
 -- Reads the registry and initializes sounds and choices
 local soundsChoicesContent = nil
-if not DEV_MODE then soundsChoicesContent = file.Read('data/zw_asi/player/sounds_choices.json', 'WORKSHOP')
+if not DEV_MODE then soundsChoicesContent = file.Read('data_static/zw_asi/player/sounds_choices.json', 'WORKSHOP')
 else soundsChoicesContent = file.Read('zw_asi/player/sounds_choices.json', 'DATA') end
 
 
@@ -54,7 +54,7 @@ local renderFunctionsTable = {}
 
 -- Reads the registry for graphics choice and initializes all of them
 local graphicsChoiceContent = nil
-if not DEV_MODE then graphicsChoiceContent = file.Read('data/zw_asi/player/graphics_choices.json', 'WORKSHOP')
+if not DEV_MODE then graphicsChoiceContent = file.Read('data_static/zw_asi/player/graphics_choices.json', 'WORKSHOP')
 else graphicsChoiceContent = file.Read('zw_asi/player/graphics_choices.json', 'DATA') end
 
 
