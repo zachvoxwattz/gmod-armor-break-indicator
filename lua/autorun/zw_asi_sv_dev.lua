@@ -1,16 +1,26 @@
--- Change this variable to 'false' during development phase only.
-local DEV_MODE = true
+-- Script is meant to be running on SERVER only!
+-- Change this variable to 'false' during production phase only.
+local DEV_MODE = false
 if CLIENT or not DEV_MODE then return end
+
+--- Adding CS Lua files and initializing network strings.
 
 AddCSLuaFile('autorun/zw_asi_cl_target.lua')
 AddCSLuaFile('autorun/zw_asi_cl_player.lua')
+AddCSLuaFile('zw_asi/render_funcs1.lua')
+AddCSLuaFile('zw_asi/render_funcs2.lua')
+AddCSLuaFile('zw_asi/render_funcs3.lua')
 
-local targetHasArmor = false
-local npcDead = 0
 util.AddNetworkString('zachwattz_asi_armor_hit')
 util.AddNetworkString('zachwattz_asi_armor_broken')
 util.AddNetworkString('zachwattz_asi_armor_broken_live')
 util.AddNetworkString('zachwattz_asi_armor_broken_death')
+
+
+--- Local functions and variables
+---------------------------------------------
+
+local targetHasArmor = false
 
 ---------------------------------------------
 

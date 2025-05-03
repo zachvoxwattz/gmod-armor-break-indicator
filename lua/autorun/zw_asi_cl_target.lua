@@ -109,7 +109,15 @@ local function loadSavedSettings()
     if err404 and asi_random_on:GetBool() then
         math.randomseed(os.time())
         for iter = 1, #choiceList do math.random() end
-        RunConsoleCommand('armor_status_indicator_target_type', choiceList[math.random(2, #choiceList)][2])
+
+        local randomlyChosenIndex = math.random(2, #choiceList)
+        RunConsoleCommand('armor_status_indicator_target_type', choiceList[randomlyChosenIndex][2])
+        selectedBreakStatusIcon = breakStatusIcons[randomlyChosenIndex - 1]
+        selectedBreakStatusSound = breakStatusSounds[randomlyChosenIndex - 1]
+        selectedHitStatusIcon = hitStatusIcons[randomlyChosenIndex - 1]
+        selectedHitStatusSound = hitStatusSounds[randomlyChosenIndex - 1]
+
+        err404 = false
     end
 end
 

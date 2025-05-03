@@ -39,42 +39,18 @@ return end
 
 
 -- Initializes the tables related to sound and choice.
-local JSONContentTable1 = util.JSONToTable(soundsChoicesContent)
-for key, value in pairs(JSONContentTable1) do
+local SFXChoicesJSONContentTable = util.JSONToTable(soundsChoicesContent)
+for key, value in pairs(SFXChoicesJSONContentTable) do
     table.insert(breakSounds, Sound(value.breakSoundUri))
     table.insert(soundsChoiceList, key + 1, { value.label, value.key })
 end
 ------------------------------
 
 
---- Graphics Resource initialization phase
--- Declares the table for graphics
-local breakGraphics = {}
-
--- Reads the registry for graphics resource and initializes all of them
-local graphicsResourceContent = nil
-if not DEV_MODE then graphicsResourceContent = file.Read('data/zw_asi/player/graphics_resource.json', 'WORKSHOP')
-else graphicsResourceContent = file.Read('zw_asi/player/graphics_resource.json', 'DATA') end
-
-
--- If 'graphicsResourceContent' is nil, displays warning message to console and performs no futher action to the addon.
-if graphicsResourceContent == nil then
-    error('Graphics resource registry file for player cannot be found. Please report to mod creator for this message', 1)
-return end
-
-
--- Initializes the table related to graphics resource.
-local GResJSONContentTable = util.JSONToTable(graphicsResourceContent)
-for key, value in pairs(GResJSONContentTable) do
-    local temporaryMaterial = Material(value.graphicsResourceUri)
-    breakGraphics[value.key] = temporaryMaterial
-end
-------------------------------
-
-
---- Graphics Choices initialization phase
--- Declares the table for graphics choice.
+--- Graphics Choices and Render functions initialization phase
+-- Declares the table for graphics choice and render functions.
 local graphicsChoiceList = { {'None', 'none'} }
+local renderFunctionsTable = {}
 
 -- Reads the registry for graphics choice and initializes all of them
 local graphicsChoiceContent = nil
@@ -92,7 +68,42 @@ return end
 local GChoicesJSONContentTable = util.JSONToTable(graphicsChoiceContent)
 for key, value in pairs(GChoicesJSONContentTable) do
     table.insert(graphicsChoiceList, { value.label, value.key })
+    renderFunctionsTable[value.key] =
+        {
+            engage = nil,
+            disengage = nil,
+            trigger = nil
+        }
 end
+
+
+-- Imports and manually assigns the functions
+-- to the render functions table here.
+include("zw_asi/render_funcs1.lua")
+include("zw_asi/render_funcs2.lua")
+include("zw_asi/render_funcs3.lua")
+
+renderFunctionsTable['concuss'] = 
+    {
+        engage = ZWASI_EngageConcussionFX,
+        disengage = ZWASI_DisengageConcussionFX,
+        trigger = ZWASI_TriggerConcussionFX
+    }
+
+renderFunctionsTable['vignette'] = 
+    {
+        engage = ZWASI_EngageVignetteFOV,
+        disengage = ZWASI_DisengageVignetteFOV,
+        trigger = ZWASI_TriggerVignetteFOV
+    }
+
+renderFunctionsTable['circle'] = 
+    {
+        engage = ZWASI_EngageImpulseCircleHUD,
+        disengage = ZWASI_DisengageImpulseCircleHUD,
+        trigger = ZWASI_TriggerImpulseCircleHUD
+    }
+
 ------------------------------
 
 
@@ -108,11 +119,10 @@ local asi_graphics_random_enable = CreateConVar('armor_status_indicator_player_h
 
 -- Local working variables.
 local selectedBreakSound = nil
-local selectedBreakGraphics = nil
-local noStyle = false
-local lastExecTConcussion = 0
-local lastExecTGraphics = 0
-local vfxSpeed = 0.075
+local previousBreakGraphicsKey = nil
+local currentSelectedGraphicsKey = nil
+local noSoundSelected = false
+local noGraphicsSelected = false
 
 -- Some useful local functions
 local function isNil(s) return s == nil or s == '' end
@@ -138,7 +148,11 @@ local function loadSavedStyle()
     if soundError404 and asi_sound_random_enable:GetBool() then
         math.randomseed(os.time())
         for iter = 1, #soundsChoiceList do math.random() end
-        RunConsoleCommand('armor_status_indicator_player_sound_type', soundsChoiceList[math.random(2, #soundsChoiceList)][2])
+        
+        local randomlyChosenIndex = math.random(2, #soundsChoiceList)
+        RunConsoleCommand('armor_status_indicator_player_sound_type', soundsChoiceList[randomlyChosenIndex][2])
+        selectedBreakSound = breakSounds[randomlyChosenIndex - 1]
+        soundError404 = false
     end
 
     -----------------------------
@@ -152,7 +166,9 @@ local function loadSavedStyle()
 
         for i = 2, #graphicsChoiceList do
             if key == graphicsChoiceList[i][2] then
-                selectedBreakGraphics = breakGraphics[i - 1]
+                currentSelectedGraphicsKey = key
+                renderFunctionsTable[currentSelectedGraphicsKey].engage()
+
                 graphicsError404 = false
                 break
             end
@@ -163,60 +179,20 @@ local function loadSavedStyle()
     if graphicsError404 and asi_graphics_random_enable:GetBool() then
         math.randomseed(os.time())
         for iter = 1, #graphicsChoiceList do math.random() end
-        RunConsoleCommand('armor_status_indicator_player_hudgraphics_type', graphicsChoiceList[math.random(2, #graphicsChoiceList)][2])
+
+        local randomlyPickedGraphicsKey = graphicsChoiceList[math.random(2, #graphicsChoiceList)][2]
+        RunConsoleCommand('armor_status_indicator_player_hudgraphics_type', randomlyPickedGraphicsKey)
+
+        currentSelectedGraphicsKey = randomlyPickedGraphicsKey
+        renderFunctionsTable[currentSelectedGraphicsKey].engage()
+
+        graphicsError404 = false
     end
 end
 
 --load specific settings--
 loadSavedStyle()
 --------------------------
-
-
-
--- HUD Graphics rendering hook.
--- Has Invalid Graphics Rendering Conditions
-local function hasInvalidGRC()
-    return not asi_enable:GetBool() or not asi_graphics_enable:GetBool() or asi_graphics_type:GetString() == 'none' or lastExecTGraphics < CurTime()
-end
-
-    
--- HUD rendering hooks: Concussion FX.
--- Has Invalid Concussion FX Rendering Conditions
-local function hasInvalidCFXRC()
-    return not asi_enable:GetBool() or lastExecTConcussion < CurTime()
-end 
-
-
-local function Render()
-    if hasInvalidCFXRC() then return end
-    
-    if not noStyle then
-        DrawMotionBlur( vfxSpeed, 10, 0.01 )
-        
-        if vfxSpeed <= 1 then
-            vfxSpeed = vfxSpeed + 0.00375
-        end
-    end
-end
--- 
--- hook.Add('RenderScreenspaceEffects', 'ZWASI_PlayerOnCrackedConcussionFX', function ()
---     if hasInvalidCFXRC() then return end
-    
---     if not noStyle then
---         DrawMotionBlur( vfxSpeed, 10, 0.01 )
-        
---         if vfxSpeed <= 1 then
---             vfxSpeed = vfxSpeed + 0.00375
---         end
---     end
--- end )
-
--- hook.Add('HUDPaint', 'ZWASI_PlayerOnCrackedConcussionBlindness', function()
---     if hasInvalidCFXRC() then return end
-
---     surface.SetDrawColor(255, 255, 255, ( lastExecTConcussion - CurTime() - 1.75 ) * 255)
---     surface.DrawRect(0, 0, ScrW(), ScrH())
--- end )
 
 
 --- UI Options component setup
@@ -239,9 +215,30 @@ local function SetUpOptionsPanel()
             graphicsComboBox:AddSpacer()
 
             graphicsComboBox.OnSelect = function(self, index, value)
-                local selectedGraphicsKey = graphicsChoiceList[index][2]
-                SetUpGraphics(selectedGraphicsKey)
-                RunConsoleCommand('armor_status_indicator_player_hudgraphics_type', selectedGraphicsKey)
+                local selectedKey = graphicsChoiceList[index][2]
+                RunConsoleCommand('armor_status_indicator_player_hudgraphics_type', selectedKey)
+                if index != 1 then
+                    noGraphicsSelected = false
+                
+                    previousBreakGraphicsKey = currentSelectedGraphicsKey
+                    currentSelectedGraphicsKey = selectedKey
+                    
+                    -- Disengages previously selected function if exists.
+                    if previousBreakGraphicsKey ~= nil then
+                        renderFunctionsTable[previousBreakGraphicsKey].disengage()
+                    end
+
+                    renderFunctionsTable[currentSelectedGraphicsKey].engage() -- Engages new hook
+                else
+                    noGraphicsSelected = true
+                    -- Disengages currently selected function if exists.
+                    if currentSelectedGraphicsKey ~= nil then
+                        renderFunctionsTable[currentSelectedGraphicsKey].disengage()
+                    end
+
+                    previousBreakGraphicsKey = nil
+                    currentSelectedGraphicsKey = nil
+                end
             end
 
         optionPanel:CheckBox('Random Graphics Picker', 'armor_status_indicator_player_hudgraphics_type_random')
@@ -263,9 +260,9 @@ local function SetUpOptionsPanel()
                 RunConsoleCommand('armor_status_indicator_player_sound_type', soundsChoiceList[index][2])
                 if index != 1 then
                     selectedBreakSound = breakSounds[index - 1]
-                    noStyle = false
+                    noSoundSelected = false
                 else 
-                    noStyle = true
+                    noSoundSelected = true
                 end
             end
         optionPanel:CheckBox('Random Sound Picker', 'armor_status_indicator_player_sound_type_random')
@@ -280,12 +277,12 @@ hook.Add('PopulateToolMenu', 'ZWASI_PlayerArmorBreakIndicatorOptions', SetUpOpti
 
 --- Event handling
 local function OnArmorBrokenLive()
-    if asi_enable:GetBool() and not noStyle then
-        if asi_graphics_enable:GetBool() then
-            lastExecTGraphics = CurTime() + 2.5
+    if asi_enable:GetBool() then
+        if asi_graphics_enable:GetBool() and not noGraphicsSelected then
+            renderFunctionsTable[currentSelectedGraphicsKey].trigger() -- Triggers graphics here.
         end
         
-        if asi_sound_enable:GetBool() then
+        if asi_sound_enable:GetBool() and not noSoundSelected then
             surface.PlaySound(selectedBreakSound)
         end
     else return end
@@ -293,8 +290,8 @@ end
 
 
 local function OnArmorBrokenDeath()
-    if asi_enable:GetBool() and not noStyle then
-        if asi_sound_enable:GetBool() then
+    if asi_enable:GetBool() then
+        if asi_sound_enable:GetBool() and not noSoundSelected then
             surface.PlaySound(selectedBreakSound)
         end
     else return end
