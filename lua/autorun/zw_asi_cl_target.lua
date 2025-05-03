@@ -2,7 +2,7 @@
 if SERVER then return end
 
 -- Set this variable to true during development and false during release.
-local DEV_MODE = true
+local DEV_MODE = false
 
 
 -- Some description for UI elements.
