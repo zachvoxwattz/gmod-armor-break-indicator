@@ -50,12 +50,6 @@ end
 
 ---------------------------------------------
 
-function isHumanPlayer(target)
-    return target:IsPlayer()
-end
-
----------------------------------------------
-
 function isAttackerPlayer(attacker)
     return attacker:IsPlayer()
 end
@@ -73,12 +67,6 @@ function attackerIsNotTarget(attacker, target)
 end
 
 ---------------------------------------------
-
-function targetHasInvalidActivationCondition(target)
-    return not isHumanPlayer(target) or not targetHasArmor
-end
-
----------------------------------------------
 ---------------------------------------------
 ---------------------------------------------
 ---------------------------------------------
@@ -87,13 +75,11 @@ end
 function OnPlayerDamage(target, damageInfo)
     if not isTargetPlayer(target) then return end
     targetHasArmor = target:Armor() > 0
-
-    print('Target armor before: ', target:Armor())
 end
 
 function OnPostPlayerDamage(target, damageInfo)
     local attacker = damageInfo:GetAttacker()
-    if not isHumanPlayer(attacker) or targetHasInvalidActivationCondition(target) then return end
+    if not isAttackerPlayer(attacker) or not isTargetPlayer(target) or not targetHasArmor then return end
 
     local targetIsAlive = target:Alive()
     if targetIsAlive then
@@ -118,7 +104,6 @@ end
 
 function OnPostNPCDamage(target, damageInfo)
     local attacker = damageInfo:GetAttacker()
-    print('Target armor after: ', target:Armor())
     if isAttackerPlayer(attacker) or not isTargetPlayer(target) or not targetHasArmor then return end
 
     local targetIsAlive = target:Alive()
