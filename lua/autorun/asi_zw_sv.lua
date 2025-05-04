@@ -3,8 +3,8 @@ if CLIENT then return end
 
 --- Adding CS Lua files and initializing network strings.
 
-AddCSLuaFile('autorun/zw_asi_cl_target.lua')
-AddCSLuaFile('autorun/zw_asi_cl_player.lua')
+AddCSLuaFile('autorun/asi_zw_cl_target.lua')
+AddCSLuaFile('autorun/asi_zw_cl_player.lua')
 AddCSLuaFile('zw_asi/render_funcs1.lua')
 AddCSLuaFile('zw_asi/render_funcs2.lua')
 AddCSLuaFile('zw_asi/render_funcs3.lua')
