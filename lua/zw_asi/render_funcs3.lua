@@ -1,3 +1,7 @@
+-- Script meant to run on Client only!
+if SERVER then return end
+
+
 --- Separated rendering functions for Impulse circle
 --- Declares working variables.
 local lastCircleExecTime = 0
