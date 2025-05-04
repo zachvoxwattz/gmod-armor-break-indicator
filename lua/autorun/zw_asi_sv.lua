@@ -1,7 +1,5 @@
 -- Script is meant to be running on SERVER only!
--- Change this variable to 'false' during production phase only.
-local DEV_MODE = false
-if CLIENT or DEV_MODE then return end
+if CLIENT then return end
 
 --- Adding CS Lua files and initializing network strings.
 
@@ -24,47 +22,59 @@ local targetHasArmor = false
 
 ---------------------------------------------
 
-local function notifyTargetArmorBrokenLive(target)
+function notifyTargetArmorBrokenLive(target)
     net.Start('zachwattz_asi_armor_broken_live')
     net.Send(target)
 end
 
 ---------------------------------------------
 
-local function notifyTargetArmorBrokenDeath(target)
+function notifyTargetArmorBrokenDeath(target)
     net.Start('zachwattz_asi_armor_broken_death')
     net.Send(target)
 end
 
 ---------------------------------------------
 
-local function notifyAttackerArmorBroken(attacker)
+function notifyAttackerArmorBroken(attacker)
     net.Start('zachwattz_asi_armor_broken')
     net.Send(attacker)
 end
 
 ---------------------------------------------
 
-local function notifyAttackerArmorHit(attacker)
+function notifyAttackerArmorHit(attacker)
     net.Start('zachwattz_asi_armor_hit')
     net.Send(attacker)
 end
 
 ---------------------------------------------
 
-local function isHumanPlayer(target)
+function isHumanPlayer(target)
     return target:IsPlayer()
 end
 
 ---------------------------------------------
 
-local function attackerIsNotTarget(attacker, target)
+function isAttackerPlayer(attacker)
+    return attacker:IsPlayer()
+end
+
+---------------------------------------------
+
+function isTargetPlayer(target)
+    return target:IsPlayer()
+end
+
+---------------------------------------------
+
+function attackerIsNotTarget(attacker, target)
     return attacker ~= target
 end
 
 ---------------------------------------------
 
-local function targetHasInvalidActivationCondition(target)
+function targetHasInvalidActivationCondition(target)
     return not isHumanPlayer(target) or not targetHasArmor
 end
 
@@ -74,12 +84,14 @@ end
 ---------------------------------------------
 ---------------------------------------------
 
-local function OnPlayerDamage(target, damageInfo)
-    if not isHumanPlayer(target) then return end
+function OnPlayerDamage(target, damageInfo)
+    if not isTargetPlayer(target) then return end
     targetHasArmor = target:Armor() > 0
+
+    print('Target armor before: ', target:Armor())
 end
 
-local function OnPostPlayerDamage(target, damageInfo)
+function OnPostPlayerDamage(target, damageInfo)
     local attacker = damageInfo:GetAttacker()
     if not isHumanPlayer(attacker) or targetHasInvalidActivationCondition(target) then return end
 
@@ -104,9 +116,10 @@ local function OnPostPlayerDamage(target, damageInfo)
     end
 end
 
-local function OnPostNPCDamage(target, damageInfo)
+function OnPostNPCDamage(target, damageInfo)
     local attacker = damageInfo:GetAttacker()
-    if isHumanPlayer(attacker) or targetHasInvalidActivationCondition(target) then return end
+    print('Target armor after: ', target:Armor())
+    if isAttackerPlayer(attacker) or not isTargetPlayer(target) or not targetHasArmor then return end
 
     local targetIsAlive = target:Alive()
     if targetIsAlive then
