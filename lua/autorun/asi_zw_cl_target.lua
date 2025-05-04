@@ -1,7 +1,7 @@
 -- Script is meant to run on client only!
 if SERVER then return end
 
--- Set this variable to true during development and false during release.
+-- Set this variable to 'true' during development and 'false' during release.
 local DEV_MODE = false
 
 
@@ -32,7 +32,7 @@ local choiceList = { {'None', 'none'} } -- Initial None value for none selection
 -- Reads the registry and initializes all of the entries
 local combinedContent = nil
 if not DEV_MODE then combinedContent = file.Read('data_static/zw_asi/target/combined.json', 'WORKSHOP')
-else combinedContent = file.Read('data_static/zw_asi/target/combined.json', 'DATA') end
+else combinedContent = file.Read('data_static/zw_asi/target/combined.json', 'GAME') end
 
 
 -- If 'combinedContent' is nil, displays warning message to console and performs no futher action to the addon.

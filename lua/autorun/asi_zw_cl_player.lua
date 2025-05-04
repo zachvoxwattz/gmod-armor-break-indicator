@@ -1,7 +1,7 @@
 -- Script is meant to run on client only!
 if SERVER then return end
 
--- Set this variable to true during development and false during release.
+-- Set this variable to 'true' during development and 'false' during release.
 local DEV_MODE = false
 
 
@@ -55,7 +55,7 @@ local renderFunctionsTable = {}
 -- Reads the registry for graphics choice and initializes all of them
 local graphicsChoiceContent = nil
 if not DEV_MODE then graphicsChoiceContent = file.Read('data_static/zw_asi/player/graphics_choices.json', 'WORKSHOP')
-else graphicsChoiceContent = file.Read('data_static/zw_asi/player/graphics_choices.json', 'DATA') end
+else graphicsChoiceContent = file.Read('data_static/zw_asi/player/graphics_choices.json', 'GAME') end
 
 
 -- If 'graphicsChoiceContent' is nil, displays warning message to console and performs no futher action to the addon.
