@@ -22,47 +22,47 @@ local targetHasArmor = false
 
 ---------------------------------------------
 
-function notifyTargetArmorBrokenLive(target)
+local function notifyTargetArmorBrokenLive(target)
     net.Start('zachwattz_asi_armor_broken_live')
     net.Send(target)
 end
 
 ---------------------------------------------
 
-function notifyTargetArmorBrokenDeath(target)
+local function notifyTargetArmorBrokenDeath(target)
     net.Start('zachwattz_asi_armor_broken_death')
     net.Send(target)
 end
 
 ---------------------------------------------
 
-function notifyAttackerArmorBroken(attacker)
+local function notifyAttackerArmorBroken(attacker)
     net.Start('zachwattz_asi_armor_broken')
     net.Send(attacker)
 end
 
 ---------------------------------------------
 
-function notifyAttackerArmorHit(attacker)
+local function notifyAttackerArmorHit(attacker)
     net.Start('zachwattz_asi_armor_hit')
     net.Send(attacker)
 end
 
 ---------------------------------------------
 
-function isAttackerPlayer(attacker)
+local function isAttackerPlayer(attacker)
     return attacker:IsPlayer()
 end
 
 ---------------------------------------------
 
-function isTargetPlayer(target)
+local function isTargetPlayer(target)
     return target:IsPlayer()
 end
 
 ---------------------------------------------
 
-function attackerIsNotTarget(attacker, target)
+local function attackerIsNotTarget(attacker, target)
     return attacker ~= target
 end
 
@@ -72,12 +72,15 @@ end
 ---------------------------------------------
 ---------------------------------------------
 
-function OnPlayerDamage(target, damageInfo)
+-- Executes whenever player receives damage
+local function OnPlayerDamage(target, damageInfo)
     if not isTargetPlayer(target) then return end
     targetHasArmor = target:Armor() > 0
 end
 
-function OnPostPlayerDamage(target, damageInfo)
+
+-- Executes after the OnPlayerDamage function
+local function OnPostPlayerDamage(target, damageInfo)
     local attacker = damageInfo:GetAttacker()
     if not isAttackerPlayer(attacker) or not isTargetPlayer(target) or not targetHasArmor then return end
 
@@ -102,7 +105,9 @@ function OnPostPlayerDamage(target, damageInfo)
     end
 end
 
-function OnPostNPCDamage(target, damageInfo)
+
+-- Executes after NPC applies damage to player
+local function OnPostNPCDamage(target, damageInfo)
     local attacker = damageInfo:GetAttacker()
     if isAttackerPlayer(attacker) or not isTargetPlayer(target) or not targetHasArmor then return end
 
@@ -118,8 +123,21 @@ function OnPostNPCDamage(target, damageInfo)
     end
 end
 
+-- Hook registration on InitPostEntity event of the game.
+local function OnInitPostEntity()
+    print("[ZachWattz's Armor Status Indicator] Registering main hooks...")
+    hook.Add('EntityTakeDamage', 'ZWASI_PlayerDamageListener', OnPlayerDamage)
+    hook.Add('PostEntityTakeDamage', 'ZWASI_PostPlayerDamageListener', OnPostPlayerDamage)
+    hook.Add('PostEntityTakeDamage', 'ZWASI_PostNPCDamageListener', OnPostNPCDamage)
+    print("[ZachWattz's Armor Status Indicator] Main hooks binded!")
+
+    -- Creates a small timeout to remove the initial hook.
+    timer.Simple(2, function()
+	    hook.Remove("InitPostEntity", "ZWASI_HooksBinder")
+        print("[ZachWattz's Armor Status Indicator] Scheduled initial hook removal task completed.")
+    end)
+end
+
 
 -- Registering everything to the hook lib.
-hook.Add('EntityTakeDamage', 'ZWASI_PlayerDamageListener', OnPlayerDamage)
-hook.Add('PostEntityTakeDamage', 'ZWASI_PostPlayerDamageListener', OnPostPlayerDamage)
-hook.Add('PostEntityTakeDamage', 'ZWASI_PostNPCDamageListener', OnPostNPCDamage)
+hook.Add('InitPostEntity', 'ZWASI_HooksBinder', OnInitPostEntity)
