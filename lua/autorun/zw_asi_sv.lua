@@ -123,18 +123,29 @@ local function OnPostNPCDamage(target, damageInfo)
     end
 end
 
--- Hook registration on InitPostEntity event of the game.
+
+-- Hook registration on InitPostEntity event of the game. Ensuring it is registered later.
 local function OnInitPostEntity()
     print("[ZachWattz's Armor Status Indicator] Registering main hooks...")
     hook.Add('EntityTakeDamage', 'ZWASI_PlayerDamageListener', OnPlayerDamage)
     hook.Add('PostEntityTakeDamage', 'ZWASI_PostPlayerDamageListener', OnPostPlayerDamage)
     hook.Add('PostEntityTakeDamage', 'ZWASI_PostNPCDamageListener', OnPostNPCDamage)
-    print("[ZachWattz's Armor Status Indicator] Main hooks binded!")
 
     -- Creates a small timeout to remove the initial hook.
-    timer.Simple(2, function()
+    timer.Simple(1, function()
 	    hook.Remove("InitPostEntity", "ZWASI_HooksBinder")
-        print("[ZachWattz's Armor Status Indicator] Scheduled initial hook removal task completed.")
+
+        local hasRemoved = true
+        for key, value in pairs(hook.GetTable()) do
+            if key == 'ZWASI_HooksBinder' then
+                hasRemoved = false
+                break
+            end
+        end
+
+        if hasRemoved then
+            print("[ZachWattz's Armor Status Indicator] Main hooks registered. Initialization completed.")
+        end
     end)
 end
 
